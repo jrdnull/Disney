@@ -4,6 +4,7 @@ import { Store } from "../state.js";
 import { award } from "../rewards.js";
 import { go } from "../main.js";
 import { EMOJI_QUIZ } from "../data/emoji.js";
+import { pickFresh } from "../recent.js";
 
 const ROUND = 8;
 
@@ -17,7 +18,8 @@ function shuffle(arr) {
 }
 
 export function renderEmoji(root) {
-  const items = shuffle(EMOJI_QUIZ).slice(0, ROUND);
+  // Avoid repeating movies seen in the last few rounds.
+  const items = pickFresh("emoji", EMOJI_QUIZ, ROUND, (it) => it.answer, 24);
   let idx = 0, score = 0;
   const wrap = el("div");
   root.appendChild(wrap);

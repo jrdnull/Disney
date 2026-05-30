@@ -52,10 +52,39 @@ soundBtn.addEventListener("click", () => {
 });
 paintSound();
 
-// Register service worker for offline play (queues have bad signal!)
+// Register service worker for offline play (queues have bad signal!) and make
+// sure installed copies (incl. iOS home-screen apps) pick up new versions.
 if ("serviceWorker" in navigator) {
+  let reloading = false;
+  // Only reload when a NEW worker replaces an existing one (a real update) —
+  // not on the very first install, where claiming the page is expected.
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
+
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => { /* offline fine */ });
+    navigator.serviceWorker.register("sw.js").then((reg) => {
+      // Check for an update now, when the app regains focus, and hourly.
+      reg.update().catch(() => {});
+      const checkForUpdate = () => reg.update().catch(() => {});
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") checkForUpdate();
+      });
+      setInterval(checkForUpdate, 60 * 60 * 1000);
+      // If an updated worker is waiting, ask it to activate immediately.
+      reg.addEventListener("updatefound", () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener("statechange", () => {
+          if (nw.state === "installed" && navigator.serviceWorker.controller) {
+            reg.waiting && reg.waiting.postMessage("skip-waiting");
+          }
+        });
+      });
+    }).catch(() => { /* offline is fine */ });
   });
 }
 

@@ -4,6 +4,7 @@ import { Store } from "../state.js";
 import { award } from "../rewards.js";
 import { go } from "../main.js";
 import { TRIVIA } from "../data/trivia.js";
+import { pickFresh } from "../recent.js";
 
 const ROUND = 8;
 
@@ -17,7 +18,8 @@ function shuffle(arr) {
 }
 
 export function renderTrivia(root) {
-  const questions = shuffle(TRIVIA).slice(0, ROUND);
+  // Avoid repeating questions seen in the last few rounds.
+  const questions = pickFresh("trivia", TRIVIA, ROUND, (q) => q.q, 32);
   let idx = 0;
   let score = 0;
 
