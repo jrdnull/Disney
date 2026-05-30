@@ -15,7 +15,7 @@ GitHub repo — no servers, no build step, no accounts.
 | 🎬 **Guess the Movie** | Work out the Disney film from a string of emojis. |
 | 🔍 **I-Spy Hunt** | Spot real things around the queue (a balloon, Mickey ears, an ice cream…). Keeps eyes busy and heads up! |
 | 🤔 **Would You Rather** | Silly Disney "this or that" choices to chat about. No wrong answers. |
-| 🎡 **Magic Wheel** | Spin for a fun challenge — silly dance, lion roar, hero pose. |
+| 🎡 **Magic Wheel** | **Flick the wheel** with your finger for a silly challenge — dance, lion roar, hero pose. |
 | 🏅 **Sticker Book** | Spend the ✨ coins you earn to unlock 12 collectible stickers. |
 | ⏱️ **Live Wait Times** | Real ride wait times for any Disney park (needs internet). |
 
@@ -33,6 +33,12 @@ loaded once it **keeps working even with terrible signal** in the line. On a
 phone, use the browser's **"Add to Home Screen"** to get a full-screen app icon.
 
 Only the *Live Wait Times* screen needs a connection — every game works offline.
+
+**Updates:** the service worker is **network-first**, so whenever the device has
+signal it loads the newest version on launch (and auto-reloads if an update lands
+while open). It only falls back to the cached copy when offline, so installed
+home-screen apps stay fresh without reinstalling. To avoid repeats, the trivia,
+emoji and wheel games remember what's come up recently (`js/recent.js`).
 
 ## 🚀 Deploy it (GitHub Pages, ~1 minute)
 

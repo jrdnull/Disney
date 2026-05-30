@@ -1,5 +1,6 @@
-// Offline-first service worker so the games keep working with bad signal.
-const CACHE = "queuequest-v1";
+// Service worker: network-first when online so updates show up straight away,
+// with a cached fallback so the games still work with poor/no signal.
+const CACHE = "queuequest-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,6 +13,7 @@ const ASSETS = [
   "./js/audio.js",
   "./js/ui.js",
   "./js/rewards.js",
+  "./js/recent.js",
   "./js/data/trivia.js",
   "./js/data/emoji.js",
   "./js/data/scavenger.js",
@@ -34,24 +36,42 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
+// Allow the page to tell a waiting worker to take over immediately.
+self.addEventListener("message", (e) => {
+  if (e.data === "skip-waiting") self.skipWaiting();
+});
+
+function fetchWithTimeout(request, ms) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error("timeout")), ms);
+    fetch(request).then((res) => { clearTimeout(t); resolve(res); }, (err) => { clearTimeout(t); reject(err); });
+  });
+}
+
 self.addEventListener("fetch", (e) => {
-  const url = new URL(e.request.url);
-  // Only handle our own files. Let live wait-time calls hit the network.
+  const { request } = e;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  // Only manage our own files; live wait-time/proxy calls go straight to network.
   if (url.origin !== location.origin) return;
-  e.respondWith(
-    caches.match(e.request).then((hit) =>
-      hit ||
-      fetch(e.request).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-        return res;
-      }).catch(() => caches.match("./index.html"))
-    )
-  );
+
+  e.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    try {
+      // Network-first: newest content when online (short timeout for slow signal).
+      const fresh = await fetchWithTimeout(request, 3000);
+      cache.put(request, fresh.clone());
+      return fresh;
+    } catch (err) {
+      // Offline / too slow: fall back to cache, then to the app shell.
+      const cached = await cache.match(request);
+      return cached || (await cache.match("./index.html")) || Response.error();
+    }
+  })());
 });
