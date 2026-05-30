@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#5b2a86" />
+  <meta name="description" content="Queue Quest — fun Disney games to play while waiting in line. Made for kids aged 5-10." />
+  <title>Queue Quest 🏰 Disney Line Games</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Queue Quest" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar" hidden>
+      <button id="homeBtn" class="icon-btn" aria-label="Home">🏰</button>
+      <div id="coins" class="coins" aria-label="Magic coins">
+        <span class="coin">✨</span><span id="coinCount">0</span>
+      </div>
+      <button id="soundBtn" class="icon-btn" aria-label="Toggle sound">🔊</button>
+    </header>
+    <main id="screen" aria-live="polite"></main>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
